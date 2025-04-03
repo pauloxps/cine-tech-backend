@@ -42,6 +42,15 @@ class Filme {
         }
         return false;
     }
+    public function buscarPorId($id) {
+        $query = "SELECT * FROM " . $this->table_name . " WHERE id = :id LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+    
 
     public function editar() {
         $query = "UPDATE " . $this->table_name . " SET 
