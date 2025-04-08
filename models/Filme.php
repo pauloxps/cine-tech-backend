@@ -12,6 +12,15 @@ class Filme {
     public $data_lancamento;
     public $duracao;
 
+    public function excluir($id)
+{
+    $query = "DELETE FROM filmes WHERE id = :id";
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+    return $stmt->execute();
+}
+
+
     public function __construct($db) {
         $this->conn = $db;
     }
@@ -22,6 +31,8 @@ class Filme {
         $stmt->execute();
         return $stmt;
     }
+
+  
 
     public function cadastrar() {
         $query = "INSERT INTO " . $this->table_name . " (titulo, sinopse, genero, capa, trailer, data_lancamento, duracao)
@@ -43,14 +54,14 @@ class Filme {
         return false;
     }
     public function buscarPorId($id) {
-        $query = "SELECT * FROM " . $this->table_name . " WHERE id = :id LIMIT 1";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":id", $id, PDO::PARAM_INT);
-        $stmt->execute();
-        
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
+    $query = "SELECT * FROM " . $this->table_name . " WHERE id = :id LIMIT 1";
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+    $stmt->execute();
     
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
 
     public function editar() {
         $query = "UPDATE " . $this->table_name . " SET 

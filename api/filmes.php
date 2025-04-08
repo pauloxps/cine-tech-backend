@@ -1,6 +1,6 @@
 <?php
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
 header("Content-Type: application/json");
 
@@ -18,7 +18,7 @@ if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
 
 if ($_SERVER["REQUEST_METHOD"] === "GET") {
     if (isset($_GET['id']) && is_numeric($_GET['id'])) {
-        $id = intval($_GET['id']);
+        $id = intval(value: $_GET['id']);
         $filmeEncontrado = $filme->buscarPorId($id);
 
         if ($filmeEncontrado) {
@@ -70,28 +70,37 @@ if ($_SERVER["REQUEST_METHOD"] === "GET") {
         http_response_code(400);
         echo json_encode(["erro" => "Dados incompletos"]);
     }
-} elseif ($_SERVER["REQUEST_METHOD"] === "PUT") {
-    parse_str(file_get_contents("php://input"), $_PUT);
-    $id = $_GET['id'] ?? null;
+} elseif ($_SERVER["REQUEST_METHOD"] === "DELETE") {
+    // DELETE ?id=1
+    parse_str($_SERVER['QUERY_STRING'], $params);
+    if (isset($params['id']) && is_numeric($params['id'])) {
+        $id = intval($params['id']);
+        $resultado = $filme->excluir($id);
 
-    if ($id && is_numeric($id)) {
-        $id = intval($id);
-        $filmeEncontrado = $filme->buscarPorId($id);
-
-        if (!$filmeEncontrado) {
-            http_response_code(404);
-            echo json_encode(["erro" => "Filme não encontrado"]);
-            exit;
+        if ($resultado) {
+            echo json_encode(["mensagem" => "Filme excluído com sucesso!"]);
+        } else {
+            http_response_code(500);
+            echo json_encode(["erro" => "Erro ao excluir o filme"]);
         }
+    } else {
+        http_response_code(400);
+        echo json_encode(["erro" => "ID inválido"]);
+    }
+}
+if ($_SERVER["REQUEST_METHOD"] === "PUT") {
+    $dados = json_decode(file_get_contents("php://input"), true);
+    $id = $_GET["id"] ?? null;
 
+    if ($id && !empty($dados)) {
         $filme->id = $id;
-        $filme->titulo = $_PUT['titulo'] ?? $filmeEncontrado['titulo'];
-        $filme->sinopse = $_PUT['sinopse'] ?? $filmeEncontrado['sinopse'];
-        $filme->genero = $_PUT['genero'] ?? $filmeEncontrado['genero'];
-        $filme->capa = $_PUT['capa'] ?? $filmeEncontrado['capa'];
-        $filme->trailer = $_PUT['trailer'] ?? $filmeEncontrado['trailer'];
-        $filme->data_lancamento = $_PUT['data_lancamento'] ?? $filmeEncontrado['data_lancamento'];
-        $filme->duracao = $_PUT['duracao'] ?? $filmeEncontrado['duracao'];
+        $filme->titulo = $dados["titulo"] ?? "";
+        $filme->sinopse = $dados["sinopse"] ?? "";
+        $filme->genero = $dados["genero"] ?? "";
+        $filme->capa = $dados["capa"] ?? "";
+        $filme->trailer = $dados["trailer"] ?? "";
+        $filme->data_lancamento = $dados["data_lancamento"] ?? "";
+        $filme->duracao = $dados["duracao"] ?? "";
 
         if ($filme->editar()) {
             echo json_encode(["mensagem" => "Filme atualizado com sucesso!"]);
@@ -103,8 +112,6 @@ if ($_SERVER["REQUEST_METHOD"] === "GET") {
         http_response_code(400);
         echo json_encode(["erro" => "ID inválido ou dados incompletos"]);
     }
-} else {
-    http_response_code(405);
-    echo json_encode(["erro" => "Método não permitido"]);
 }
+
 ?>
